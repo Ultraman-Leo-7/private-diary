@@ -1,0 +1,45 @@
+name: Release
+
+# 打一个 v* 标签（如 v0.1.0）就会在 GitHub 服务器上构建出 Windows 安装包，
+# 并自动创建一个 Release 把 .exe/.msi 挂上去供下载。
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build & publish release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # 以下两个是“自动更新”用的签名密钥（可选）：仓库里配了 Secrets 才会签名并生成 latest.json，
+          # 没配也能正常出安装包。
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: "私密日记 ${{ github.ref_name }}"
+          releaseBody: "下载下方的 `.exe`（NSIS 安装包）或 `.msi` 安装即可。首次运行若提示“未知发布者”，点“更多信息 → 仍要运行”。"
+          releaseDraft: false
+          prerelease: false
