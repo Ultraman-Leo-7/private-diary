@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "./api";
 import type { Phase } from "./types";
+import { checkForUpdate } from "./updater";
 import SetupScreen from "./components/SetupScreen";
 import LockScreen from "./components/LockScreen";
 import MainScreen from "./components/MainScreen";
@@ -14,6 +15,13 @@ export default function App() {
       .vaultExists()
       .then((exists) => setPhase(exists ? "locked" : "setup"))
       .catch(() => setPhase("setup"));
+    // 仅当用户开启「自动检查更新」时才联网检查（默认关闭）
+    api
+      .getSettings()
+      .then((s) => {
+        if (s.auto_update_check) checkForUpdate(false).catch(() => {});
+      })
+      .catch(() => {});
   }, []);
 
   if (phase === "loading") {

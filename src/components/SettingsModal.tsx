@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { api } from "../api";
 import type { Settings } from "../types";
+import { checkForUpdate } from "../updater";
 
 export default function SettingsModal({
   onClose,
@@ -30,6 +31,16 @@ export default function SettingsModal({
 
   // 应用偏好（自动同步开关等）
   const [settings, setSettings] = useState<Settings | null>(null);
+  const [updateMsg, setUpdateMsg] = useState("");
+
+  async function checkUpdate() {
+    setUpdateMsg("检查中…");
+    try {
+      setUpdateMsg((await checkForUpdate(true)) || "已是最新版本 ✓");
+    } catch (e) {
+      setUpdateMsg("检查失败：" + e);
+    }
+  }
 
   useEffect(() => {
     api
@@ -271,6 +282,24 @@ export default function SettingsModal({
             导出的是<b>明文</b>，请妥善保管。
           </p>
           <button onClick={exportBackup}>选择文件夹并导出</button>
+        </section>
+
+        <section className="settings-section">
+          <h3>更新</h3>
+          {settings && (
+            <label className="check-row">
+              <input
+                type="checkbox"
+                checked={settings.auto_update_check}
+                onChange={(e) => updateSetting({ auto_update_check: e.target.checked })}
+              />
+              启动时自动检查更新（默认关闭）
+            </label>
+          )}
+          <div className="btn-row">
+            <button onClick={checkUpdate}>立即检查更新</button>
+          </div>
+          {updateMsg && <div className="modal-msg cloud-msg">{updateMsg}</div>}
         </section>
 
         {msg && <div className="modal-msg">{msg}</div>}
