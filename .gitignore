@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# 本地私有笔记 / 动态记忆（仅本地保留，不上传 GitHub）
+/AGENTS.md
+/docs/PLAN.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
